@@ -1,23 +1,38 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>시간 테스트</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>인터벌 타이머</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 30px; }
+    select, input, button {
+      font-size: 18px; padding: 10px; margin: 10px;
+    }
+    #log {
+      margin-top: 20px; font-size: 16px; white-space: pre-line;
+      border: 1px solid #ccc; padding: 10px;
+      max-width: 400px; margin-left: auto; margin-right: auto;
+      background: #f9f9f9; border-radius: 5px; text-align: left;
+      height: 200px; overflow-y: auto;
+    }
+  </style>
 </head>
 <body>
-  <h1>현재 시간 테스트</h1>
+  <h1>인터벌 타이머</h1>
+
   <div id="currentTime">현재 시간: --:--:--</div>
 
-  <script>
-    function updateTime() {
-      document.getElementById("currentTime").textContent = "현재 시간: " + new Date().toLocaleTimeString();
-    }
-    updateTime();
-    setInterval(updateTime, 1000);
+  <div>
+    시작 시간:
+    <select id="hour"></select>시
+    <select id="minute"></select>분
+  </div>
 
-    // 음성 테스트
-    // window.speechSynthesis.speak(new SpeechSynthesisUtterance("테스트"));
-  </script>
-</body>
-</html>
+  <div>
+    <label>인터벌 (초): <input type="number" id="interval" value="10" min="6" /></label><br />
+    <label>반복 횟수: <input type="number" id="repeatCount" value="3" min="1" /></label>
+  </div>
+
+  <button id="startBtn">시작</button>
+  <button id="stopBtn" disabled>정
