@@ -1,11 +1,23 @@
-body {
-  font-family: sans-serif;
-  text-align: center;
-  padding: 30px;
-}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>시간 테스트</title>
+</head>
+<body>
+  <h1>현재 시간 테스트</h1>
+  <div id="currentTime">현재 시간: --:--:--</div>
 
-input, button {
-  margin: 10px;
-  font-size: 18px;
-  padding: 10px;
-}
+  <script>
+    function updateTime() {
+      document.getElementById("currentTime").textContent = "현재 시간: " + new Date().toLocaleTimeString();
+    }
+    updateTime();
+    setInterval(updateTime, 1000);
+
+    // 음성 테스트
+    // window.speechSynthesis.speak(new SpeechSynthesisUtterance("테스트"));
+  </script>
+</body>
+</html>
