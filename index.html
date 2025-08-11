@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>인터벌 타이머 - 수정본5</title>
+  <title>인터벌 타이머 - 수정본6</title>
   <style>
     body { font-family: sans-serif; text-align: center; padding: 30px; }
     select, input, button {
@@ -19,7 +19,7 @@
   </style>
 </head>
 <body>
-  <h1>인터벌 타이머 - 수정본5</h1>
+  <h1>인터벌 타이머 - 수정본6</h1>
 
   <div id="currentTime">현재 시간: --:--:--</div>
 
@@ -51,7 +51,7 @@
       let timeouts = [];
       let current = 1;
 
-      // 시간 선택 박스 채우기
+      // 시간 선택
       for(let h=0; h<24; h++) {
         const opt = document.createElement("option");
         opt.value = h;
@@ -73,7 +73,7 @@
       setInterval(updateCurrentTime, 1000);
 
       function speak(text) {
-        window.speechSynthesis.cancel();  // 중복 제거
+        window.speechSynthesis.cancel();
         const utter = new SpeechSynthesisUtterance(text);
         utter.lang = "ko-KR";
         window.speechSynthesis.speak(utter);
@@ -111,20 +111,25 @@
             timeouts.push(t);
           });
 
+          const wait = intervalSec * 1000;
           const t = setTimeout(() => {
             runNext();
-          }, intervalSec * 1000);
+          }, wait);
           timeouts.push(t);
         }
 
-        runNext();
+        // 인터벌1 끝난 후 인터벌2부터 실행 (간격 보장)
+        const t = setTimeout(() => {
+          runNext();
+        }, intervalSec * 1000);
+        timeouts.push(t);
       }
 
       startBtn.onclick = () => {
         clearAllTimeouts();
         logDiv.textContent = "";
 
-        // 사파리용 음성 트리거
+        // iOS용 음성 트리거
         speak("타이머를 시작합니다");
 
         const hour = parseInt(hourSelect.value,10);
@@ -167,11 +172,11 @@
           timeouts.push(t);
         });
 
-        // 인터벌 2 이후부터 실행
-        const startNextIntervals = setTimeout(() => {
+        // 인터벌 2 이후 예약
+        const startIntervals = setTimeout(() => {
           runIntervals(interval, repeatCount);
-        }, delay + 100);  // 스타트 이후 실행
-        timeouts.push(startNextIntervals);
+        }, delay + 100);
+        timeouts.push(startIntervals);
       };
 
       stopBtn.onclick = () => {
