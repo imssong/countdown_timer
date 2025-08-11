@@ -49,7 +49,7 @@
 
     let timeouts = [];
 
-    // 시간 셀렉터 초기화
+    // 시간 선택 박스 채우기
     for(let h=0; h<24; h++) {
       const opt = document.createElement("option");
       opt.value = h;
@@ -106,75 +106,10 @@
 
       const delay = startTime - now;
       if (delay < 6000) {
-        alert("시작 시간은 현재 시간보다 최소 6초 이상 이후여야 합니다.");
+        alert("시작 시간은 현재 시간보다 최소 6초 이후여야 합니다.");
         return;
       }
 
       startBtn.disabled = true;
       stopBtn.disabled = false;
-      log(`시작 예정: ${startTime.toLocaleTimeString()}`);
-
-      const countdownTexts = ["5", "4", "3", "2", "1", "스타트"];
-      const countdownDelay = delay - countdownTexts.length * 1000;
-
-      const countdownTimer = setTimeout(() => {
-        countdownTexts.forEach((text, i) => {
-          const t = setTimeout(() => {
-            speak(text);
-            log(text);
-          }, i * 1000);
-          timeouts.push(t);
-        });
-
-        // 인터벌 시작
-        const startInterval = setTimeout(() => {
-          runIntervals(interval, repeatCount);
-        }, countdownTexts.length * 1000);
-        timeouts.push(startInterval);
-      }, countdownDelay);
-      timeouts.push(countdownTimer);
-    };
-
-    function runIntervals(intervalSec, repeatCount) {
-      let current = 1;
-
-      function runNext() {
-        if (current > repeatCount) {
-          log("완료되었습니다.");
-          startBtn.disabled = false;
-          stopBtn.disabled = true;
-          return;
-        }
-
-        log(`인터벌 ${current} 시작`);
-        
-        // 5초 전 카운트다운
-        const countdownTexts = ["5", "4", "3", "2", "1"];
-        countdownTexts.forEach((text, i) => {
-          const t = setTimeout(() => {
-            speak(text);
-            log(`인터벌 ${current} 카운트다운: ${text}`);
-          }, (intervalSec - 5 + i) * 1000);
-          timeouts.push(t);
-        });
-
-        const t = setTimeout(() => {
-          current++;
-          runNext();
-        }, intervalSec * 1000);
-        timeouts.push(t);
-      }
-
-      runNext();
-    }
-
-    stopBtn.onclick = () => {
-      clearAllTimeouts();
-      window.speechSynthesis.cancel();
-      log("중지되었습니다.");
-      startBtn.disabled = false;
-      stopBtn.disabled = true;
-    };
-  </script>
-</body>
-</html>
+      log(`시작 예정: $
