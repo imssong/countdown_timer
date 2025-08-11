@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>인터벌 타이머 - 수정본10</title>
+  <title>인터벌 타이머 - 수정본11</title>
   <style>
     body { font-family: sans-serif; text-align: center; padding: 30px; }
     select, input, button {
@@ -12,14 +12,14 @@
     #log {
       margin-top: 20px; font-size: 16px; white-space: pre-line;
       border: 1px solid #ccc; padding: 10px;
-      max-width: 400px; margin-left: auto; margin-right: auto;
+      max-width: 500px; margin-left: auto; margin-right: auto;
       background: #f9f9f9; border-radius: 5px; text-align: left;
       height: 200px; overflow-y: auto;
     }
   </style>
 </head>
 <body>
-  <h1>인터벌 타이머 - 수정본10</h1>
+  <h1>인터벌 타이머 - 수정본11</h1>
 
   <div id="currentTime">현재 시간: --:--:--</div>
 
@@ -30,8 +30,15 @@
   </div>
 
   <div>
-    <label>인터벌 1 (초): <input type="number" id="interval1" value="10" min="6" /></label><br />
-    <label>인터벌 2 (초): <input type="number" id="interval2" placeholder="미입력 시 생략" /></label>
+    <h3>인터벌 1</h3>
+    <label>시간 (초): <input type="number" id="interval1" value="10" min="6" /></label><br />
+    <label>반복 횟수: <input type="number" id="repeat1" value="2" min="1" /></label>
+  </div>
+
+  <div>
+    <h3>인터벌 2</h3>
+    <label>시간 (초): <input type="number" id="interval2" placeholder="없으면 생략" /></label><br />
+    <label>반복 횟수: <input type="number" id="repeat2" placeholder="없으면 생략" /></label>
   </div>
 
   <button id="startBtn">시작</button>
@@ -41,6 +48,7 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
+      const now = new Date();
       const currentTimeDiv = document.getElementById("currentTime");
       const hourSelect = document.getElementById("hour");
       const minuteSelect = document.getElementById("minute");
@@ -49,11 +57,12 @@
       const stopBtn = document.getElementById("stopBtn");
 
       const interval1Input = document.getElementById("interval1");
+      const repeat1Input = document.getElementById("repeat1");
       const interval2Input = document.getElementById("interval2");
+      const repeat2Input = document.getElementById("repeat2");
 
       let timeouts = [];
 
-      // 시간 선택 셋업
       for (let h = 0; h < 24; h++) {
         const opt = document.createElement("option");
         opt.value = h;
@@ -92,37 +101,56 @@
         window.speechSynthesis.cancel();
       }
 
-      function scheduleCountdown(startTime, label) {
-        const countdownTexts = ["5", "4", "3", "2", "1", "스타트"];
-        countdownTexts.forEach((text, i) => {
-          const speakTime = startTime - (countdownTexts.length - 1 - i) * 1000;
-          const delay = speakTime - Date.now();
-
+      function scheduleCountdown(startTime, label, index) {
+        const texts = ["5", "4", "3", "2", "1", "스타트"];
+        texts.forEach((text, i) => {
           const t = setTimeout(() => {
             speak(text);
-            log(`${label} 카운트다운: ${text}`);
-          }, delay);
+            log(`${label} ${index} 카운트다운: ${text}`);
+          }, startTime - Date.now() - (texts.length - 1 - i) * 1000);
           timeouts.push(t);
         });
       }
 
-      function startTimer() {
+      function scheduleInterval(startAfterMs, intervalSec, repeatCount, label, callback) {
+        for (let i = 0; i < repeatCount; i++) {
+          const startTime = Date.now() + startAfterMs + i * intervalSec * 1000;
+          scheduleCountdown(startTime, label, i + 1);
+        }
+
+        const totalDuration = repeatCount * intervalSec * 1000 + 6000;
+        const end = setTimeout(() => {
+          log(`${label} 완료`);
+          if (callback) callback();
+        }, startAfterMs + totalDuration);
+        timeouts.push(end);
+      }
+
+      startBtn.onclick = () => {
         clearAllTimeouts();
         logDiv.textContent = "";
-        speak("타이머를 시작합니다"); // iOS 음성 재생 트리거
+        speak("타이머 시작"); // iOS 대응
 
         const hour = parseInt(hourSelect.value, 10);
         const minute = parseInt(minuteSelect.value, 10);
         const interval1 = parseInt(interval1Input.value, 10);
-        const interval2 = parseInt(interval2Input.value, 10) || null;
+        const repeat1 = parseInt(repeat1Input.value, 10);
+
+        const interval2 = parseInt(interval2Input.value, 10);
+        const repeat2 = parseInt(repeat2Input.value, 10);
+
+        if (interval1 < 6 || isNaN(repeat1) || repeat1 < 1) {
+          alert("인터벌 1 정보가 잘못되었습니다.");
+          return;
+        }
 
         const now = new Date();
         let startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute, 0, 0);
         if (startTime <= now) startTime.setDate(startTime.getDate() + 1);
 
         const delay = startTime - now;
-        if (delay < 6000 || isNaN(interval1) || interval1 < 6) {
-          alert("시작 시간은 최소 6초 이상이어야 하며, 인터벌 1은 6초 이상이어야 합니다.");
+        if (delay < 6000) {
+          alert("시작 시간은 최소 6초 이후여야 합니다.");
           return;
         }
 
@@ -130,33 +158,28 @@
         stopBtn.disabled = false;
 
         log(`인터벌 1 시작 예정: ${startTime.toLocaleTimeString()}`);
-        scheduleCountdown(startTime.getTime(), "인터벌 1");
+        scheduleCountdown(startTime.getTime(), "인터벌 1", 1);
 
-        const t1 = setTimeout(() => {
-          log("인터벌 1 실행 완료");
-
-          if (interval2 && interval2 >= 6) {
-            const startTime2 = Date.now() + interval2 * 1000;
-            log(`인터벌 2 시작 예정: ${new Date(startTime2).toLocaleTimeString()}`);
-            scheduleCountdown(startTime2, "인터벌 2");
-
-            const t2 = setTimeout(() => {
-              log("인터벌 2 실행 완료");
+        const t = setTimeout(() => {
+          log("인터벌 1 시작");
+          scheduleInterval(0, interval1, repeat1 - 1, "인터벌 1", () => {
+            if (!isNaN(interval2) && interval2 >= 6 && !isNaN(repeat2) && repeat2 >= 1) {
+              log("인터벌 2 시작");
+              scheduleInterval(0, interval2, repeat2, "인터벌 2", () => {
+                log("모든 반복 완료");
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+              });
+            } else {
+              log("모든 반복 완료");
               startBtn.disabled = false;
               stopBtn.disabled = true;
-            }, interval2 * 1000 + 6000);
-            timeouts.push(t2);
-          } else {
-            log("완료되었습니다. (인터벌 2 없음)");
-            startBtn.disabled = false;
-            stopBtn.disabled = true;
-          }
-
+            }
+          });
         }, delay + 6000);
-        timeouts.push(t1);
-      }
+        timeouts.push(t);
+      };
 
-      startBtn.onclick = () => startTimer();
       stopBtn.onclick = () => {
         clearAllTimeouts();
         log("중지되었습니다.");
