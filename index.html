@@ -137,35 +137,33 @@
       };
 
       function runIntervals(intervalSec, repeatCount) {
-        let current = 1;
+        let current = 0;
 
         function runNext() {
-          if (current > repeatCount) {
-            log("완료되었습니다.");
-            startBtn.disabled = false;
-            stopBtn.disabled = true;
-            return;
-          }
+  if (current >= repeatCount) {
+    log("완료되었습니다.");
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+    return;
+  }
 
-          log(`인터벌 ${current} 시작 예정`);
+  current++;
+  log(`인터벌 ${current} 시작 예정`);
 
-          const countdownTexts = ["5", "4", "3", "2", "1", "스타트"];
-          countdownTexts.forEach((text, i) => {
-            const t = setTimeout(() => {
-              speak(text);
-              log(`인터벌 ${current} 카운트다운: ${text}`);
-            }, (intervalSec - 6 + i) * 1000);
-            timeouts.push(t);
-          });
+  const countdownTexts = ["5", "4", "3", "2", "1", "스타트"];
+  countdownTexts.forEach((text, i) => {
+    const t = setTimeout(() => {
+      speak(text);
+      log(`인터벌 ${current} 카운트다운: ${text}`);
+    }, (intervalSec - 6 + i) * 1000);
+    timeouts.push(t);
+  });
 
-          const t = setTimeout(() => {
-            current++;
-            runNext();
-          }, intervalSec * 1000);
-          timeouts.push(t);
-        }
-
-        runNext();
+  const t = setTimeout(() => {
+    runNext();
+  }, intervalSec * 1000);
+  timeouts.push(t);
+}
       }
 
       stopBtn.onclick = () => {
