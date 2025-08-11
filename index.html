@@ -35,4 +35,146 @@
   </div>
 
   <button id="startBtn">시작</button>
-  <button id="stopBtn" disabled>정
+  <button id="stopBtn" disabled>정지</button>
+
+  <div id="log"></div>
+
+  <script>
+    const currentTimeDiv = document.getElementById("currentTime");
+    const hourSelect = document.getElementById("hour");
+    const minuteSelect = document.getElementById("minute");
+    const logDiv = document.getElementById("log");
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
+
+    let timeouts = [];
+
+    // 시간 셀렉터 초기화
+    for(let h=0; h<24; h++) {
+      const opt = document.createElement("option");
+      opt.value = h;
+      opt.textContent = h.toString().padStart(2,"0");
+      hourSelect.appendChild(opt);
+    }
+    for(let m=0; m<60; m++) {
+      const opt = document.createElement("option");
+      opt.value = m;
+      opt.textContent = m.toString().padStart(2,"0");
+      minuteSelect.appendChild(opt);
+    }
+
+    function updateCurrentTime() {
+      const now = new Date();
+      currentTimeDiv.textContent = "현재 시간: " + now.toLocaleTimeString();
+    }
+    updateCurrentTime();
+    setInterval(updateCurrentTime, 1000);
+
+    function speak(text) {
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = "ko-KR";
+      window.speechSynthesis.speak(utter);
+    }
+
+    function clearAllTimeouts() {
+      timeouts.forEach(t => clearTimeout(t));
+      timeouts = [];
+    }
+
+    function log(msg) {
+      logDiv.textContent += msg + "\n";
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    startBtn.onclick = () => {
+      clearAllTimeouts();
+      logDiv.textContent = "";
+
+      const hour = parseInt(hourSelect.value,10);
+      const minute = parseInt(minuteSelect.value,10);
+      const interval = parseInt(document.getElementById("interval").value,10);
+      const repeatCount = parseInt(document.getElementById("repeatCount").value,10);
+
+      if(interval < 6) {
+        alert("인터벌은 최소 6초 이상이어야 합니다 (카운트다운 포함)");
+        return;
+      }
+
+      const now = new Date();
+      let startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute, 0, 0);
+      if (startTime <= now) startTime.setDate(startTime.getDate() + 1);
+
+      const delay = startTime - now;
+      if (delay < 6000) {
+        alert("시작 시간은 현재 시간보다 최소 6초 이상 이후여야 합니다.");
+        return;
+      }
+
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+      log(`시작 예정: ${startTime.toLocaleTimeString()}`);
+
+      const countdownTexts = ["5", "4", "3", "2", "1", "스타트"];
+      const countdownDelay = delay - countdownTexts.length * 1000;
+
+      const countdownTimer = setTimeout(() => {
+        countdownTexts.forEach((text, i) => {
+          const t = setTimeout(() => {
+            speak(text);
+            log(text);
+          }, i * 1000);
+          timeouts.push(t);
+        });
+
+        // 인터벌 시작
+        const startInterval = setTimeout(() => {
+          runIntervals(interval, repeatCount);
+        }, countdownTexts.length * 1000);
+        timeouts.push(startInterval);
+      }, countdownDelay);
+      timeouts.push(countdownTimer);
+    };
+
+    function runIntervals(intervalSec, repeatCount) {
+      let current = 1;
+
+      function runNext() {
+        if (current > repeatCount) {
+          log("완료되었습니다.");
+          startBtn.disabled = false;
+          stopBtn.disabled = true;
+          return;
+        }
+
+        log(`인터벌 ${current} 시작`);
+        
+        // 5초 전 카운트다운
+        const countdownTexts = ["5", "4", "3", "2", "1"];
+        countdownTexts.forEach((text, i) => {
+          const t = setTimeout(() => {
+            speak(text);
+            log(`인터벌 ${current} 카운트다운: ${text}`);
+          }, (intervalSec - 5 + i) * 1000);
+          timeouts.push(t);
+        });
+
+        const t = setTimeout(() => {
+          current++;
+          runNext();
+        }, intervalSec * 1000);
+        timeouts.push(t);
+      }
+
+      runNext();
+    }
+
+    stopBtn.onclick = () => {
+      clearAllTimeouts();
+      window.speechSynthesis.cancel();
+      log("중지되었습니다.");
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+    };
+  </script>
+</body>
+</html>
